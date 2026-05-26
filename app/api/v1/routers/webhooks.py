@@ -28,7 +28,7 @@ from app.exceptions import ForbiddenActionError, NotFoundError
 
 router = APIRouter(tags=["webhook"])
 
-@router.get("/pipefy/card-updated", status_code=status.HTTP_200_OK)
+@router.post("/pipefy/card-updated", status_code=status.HTTP_201_CREATED)
 async def card_updated(
     pipefy: PipefyCardUpdatedWebhookSchema, 
     session: AsyncSession = Depends(get_session)

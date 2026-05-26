@@ -95,5 +95,5 @@ async def create_customer(
         await session.rollback()
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Erro interno do servidor."    
+            detail=f"Erro interno do servidor: {str(exc)}"    
         )
