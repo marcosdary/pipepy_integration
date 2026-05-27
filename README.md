@@ -81,7 +81,6 @@ A aplicação espera as seguintes variáveis:
 
 ```env
 DATABASE_URL=postgresql+asyncpg://postgres:SENHA@localhost:5432/postgres
-REDIS_URL=redis://localhost:6379
 ```
 
 ---
@@ -146,7 +145,6 @@ Utilize as mesmas credenciais configuradas no container:
 
 ```env
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
-REDIS_URL=redis://localhost:6379
 ```
 
 ### 4.6 Crie as tabelas usando Docker Exec
