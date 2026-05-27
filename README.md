@@ -85,16 +85,135 @@ REDIS_URL=redis://localhost:6379
 ```
 
 ---
+## 4. Configuração do PostgreSQL com Docker
 
-## 4. Crie as estruturas do banco de dados
+Caso não tenha o PostgreSQL instalado localmente, você pode utilizar Docker para subir o banco rapidamente.
+
+---
+
+### 4.1 Instale o Docker
+
+Baixe e instale o Docker Desktop conforme o seu sistema operacional:
+
+- Windows / macOS:
+  - https://www.docker.com/products/docker-desktop/
+
+- Linux:
+  - https://docs.docker.com/engine/install/
+
+Após a instalação, verifique se o Docker está funcionando:
+
+```bash
+docker --version
+```
+
+---
+
+### 4.2 Baixe a imagem do PostgreSQL
+
+```bash
+docker pull postgres:16
+```
+
+---
+
+### 4.3 Inicialize o container PostgreSQL
+
+```bash
+docker run --name pipefy_postgres \
+-e POSTGRES_USER=postgres \
+-e POSTGRES_PASSWORD=postgres \
+-e POSTGRES_DB=postgres \
+-p 5432:5432 \
+-d postgres:16
+```
+
+---
+
+### 4.4 Verifique se o container está rodando
+
+```bash
+docker ps
+```
+
+Você deverá visualizar um container chamado `pipefy_postgres`.
+
+---
+
+### 4.5 Configure o arquivo `.env`
+
+Utilize as mesmas credenciais configuradas no container:
+
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
+REDIS_URL=redis://localhost:6379
+```
+
+---
+
+### 4.6 Crie as tabelas da aplicação
 
 Execute o script SQL:
 
 ```bash
-psql "postgresql://postgres:SENHA@localhost:5432/postgres" -f db/script.sql
+psql "postgresql://postgres:postgres@localhost:5432/postgres" -f db/script.sql
 ```
 
-> Altere usuário, senha, host, porta e banco conforme o seu ambiente.
+---
+
+### 4.7 Alternativa usando Docker Exec
+
+Caso não tenha o `psql` instalado localmente, execute o script diretamente no container:
+
+```bash
+docker exec -i pipefy_postgres psql -U postgres -d postgres < db/script.sql
+```
+
+---
+
+### 4.8 Conectando no DBeaver
+
+Para visualizar o banco utilizando DBeaver:
+
+1. Abra o DBeaver
+2. Clique em **New Database Connection**
+3. Escolha **PostgreSQL**
+4. Utilize as seguintes configurações:
+
+| Campo      | Valor     |
+|-------------|------------|
+| Host        | localhost  |
+| Port        | 5432       |
+| Database    | postgres   |
+| Username    | postgres   |
+| Password    | postgres   |
+
+5. Clique em **Test Connection**
+6. Depois em **Finish**
+
+---
+
+### 4.9 Parar o container
+
+```bash
+docker stop pipefy_postgres
+```
+
+---
+
+### 4.10 Iniciar novamente o container
+
+```bash
+docker start pipefy_postgres
+```
+
+---
+
+### 4.11 Remover o container
+
+```bash
+docker rm -f pipefy_postgres
+```
 
 ---
 
