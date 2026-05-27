@@ -20,63 +20,58 @@ from app.schemas.pipefy.field import PipefyFieldUpdateSchema
 # Exceptions
 from app.exceptions import ForbiddenActionError, NotFoundError
 
-router = APIRouter(tags=["webhook"])
-
+router = APIRouter()
 
 @router.post(
     "/pipefy/card-updated",
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    summary="Processa webhook de atualização de card do Pipefy",
+    description="""
+Processa eventos de atualização de card recebidos do Pipefy.
+
+Fluxo do endpoint:
+- Verifica se o evento já foi processado
+- Atualiza dados do cliente no banco
+- Sincroniza campos no Pipefy
+- Registra o webhook como processado
+- Confirma a transação no banco
+""",
+    responses={
+        201: {
+            "description": "Webhook processado com sucesso"
+        },
+        404: {
+            "description": "Recurso não encontrado (cliente ou evento)"
+        },
+        403: {
+            "description": "Ação não permitida"
+        },
+        500: {
+            "description": "Erro interno inesperado"
+        },
+    },
 )
 async def card_updated(
     pipefy: PipefyCardUpdatedWebhookSchema,
     session: AsyncSession = Depends(get_session)
-) -> None:
+) -> dict:
     """
-    Processa o webhook de atualização de card do Pipefy.
-
-    Fluxo:
-        1. Verifica se o evento já foi processado.
-        2. Atualiza os dados do cliente.
-        3. Atualiza os campos do card no Pipefy.
-        4. Registra o webhook como processado.
-        5. Confirma a transação no banco.
-
-    Args:
-        pipefy:
-            Payload recebido do webhook do Pipefy.
-
-        session:
-            Sessão assíncrona do banco de dados.
-
-    Returns:
-        dict:
-            Resultado do processamento do webhook.
-
-    Raises:
-        HTTPException:
-            - 404: Recurso não encontrado.
-            - 403: Ação não permitida.
-            - 500: Erro interno inesperado.
+    Processa webhook de atualização de card do Pipefy.
     """
     try:
-        # Inicializa os repositórios
         webhook_pipefy_repo = WebhookPipefyRepository(session)
         customer_repo = CustomerRepository(session)
 
-        # Verifica se o evento já foi processado
         await webhook_pipefy_repo.get_by_id(pipefy.event_id)
 
-        # Atualiza os dados do cliente
         customer = await customer_repo.update(
             CustomerUpdateSchema(
                 cliente_email=pipefy.cliente_email
             )
         )
 
-        # Inicializa o serviço do Pipefy
         pipefy_service = PipefyService()
 
-        # Atualiza os campos do card
         await pipefy_service.update_card_field(
             status=PipefyFieldUpdateSchema(
                 card_id=pipefy.card_id,
@@ -90,13 +85,11 @@ async def card_updated(
             )
         )
 
-        # Registra o webhook como processado
         await webhook_pipefy_repo.create(
             event_id=pipefy.event_id,
             status=Status.processed
         )
 
-        # Confirma a transação
         await session.commit()
 
         return {
@@ -107,7 +100,6 @@ async def card_updated(
 
     except NotFoundError as exc:
         await session.rollback()
-
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             detail=str(exc)
@@ -115,7 +107,6 @@ async def card_updated(
 
     except ForbiddenActionError as exc:
         await session.rollback()
-
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
             detail=str(exc)
@@ -123,7 +114,6 @@ async def card_updated(
 
     except Exception as exc:
         await session.rollback()
-
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(exc)

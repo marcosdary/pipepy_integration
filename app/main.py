@@ -3,6 +3,7 @@ from fastapi import (
     Request,
     status
 )
+from typing import Dict
 from fastapi.exceptions import (
     HTTPException,
     RequestValidationError
@@ -16,10 +17,23 @@ from app.api import v1
 # Integrations
 from app.integrations.pipefy import graphql
 
+# Schema
+from app.schemas.index import IndexSchema
+
 # Inicializa a aplicação FastAPI
 app = FastAPI(
-    title="Integração com Pepify",
+    title="Integração com Pipefy",
     version="0.1.0",
+    description="""
+API responsável pela integração entre o sistema interno e o Pipefy.
+
+Esta API permite:
+- Gerenciamento de clientes
+- Processamento de webhooks do Pipefy
+- Sincronização de dados entre sistemas
+
+Documentação gerada automaticamente via OpenAPI (Swagger / Redoc).
+"""
 )
 
 # Configuração de CORS
@@ -42,14 +56,15 @@ app.add_middleware(
 # Registra as rotas REST da API v1
 app.include_router(
     v1.router,
-    prefix="/api/v1"
+    prefix="/api/v1",
+    tags=["API"]
 )
 
 # Registra as rotas GraphQL
 app.include_router(
     graphql.router,
     prefix="/graphql",
-    tags=["GraphQL", "Exemplo do Pepify"]
+    tags=["Exemplo do Pepify"]
 )
 
 
@@ -122,17 +137,19 @@ async def http_exception_handler(
     )
 
 
-@app.get("/")
+@app.get(
+    "/",
+    tags=["Index"],
+    response_model=IndexSchema,
+    summary="Endpoint inicial da API",
+    description="Retorna informações básicas da API, como versão e status de integração."
+)
 def index():
     """
     Endpoint inicial da aplicação.
-
-    Returns:
-        dict:
-            Informações básicas da API.
     """
 
-    return {
-        "version": "1.0.0",
-        "name": "Integração com Pepify"
-    }
+    return IndexSchema(
+        version="1.0.0",
+        message="Integração com Pipefy"
+    )

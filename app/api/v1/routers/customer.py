@@ -27,30 +27,24 @@ from app.services import PipefyService
 # Exceptions
 from app.exceptions import DuplicateReviewError, UnprocessableEntity
 
-router = APIRouter(tags=["cliente"])
+router = APIRouter()
 
 @router.post(
     "", 
     status_code=status.HTTP_201_CREATED, 
-    response_model=CustomerReadSchema
+    response_model=CustomerReadSchema,
+    summary="Criar cliente",
+    description="Cria cliente e sincroniza com Pipefy.",
+    responses={
+        409: {"description": "Cliente duplicado"},
+        422: {"description": "Erro de validação"},
+        500: {"description": "Erro interno"},
+    }
 )
 async def create_customer(
     customer: CustomerCreateSchema, 
     session: AsyncSession = Depends(get_session)
 ):
-    """Cria um cliente e sincroniza seus dados com o Pipefy.
-
-    Args:
-        customer: Dados de criação do cliente recebidos na requisição.
-        session: Sessão assíncrona do banco de dados injetada pelo FastAPI.
-
-    Returns:
-        CustomerReadSchema: Dados do cliente criado.
-
-    Raises:
-        HTTPException: Retorna 400 quando os dados são inválidos ou violam
-            restrições de integridade, e 500 para falhas inesperadas.
-    """
     try:
         customer_repo = CustomerRepository(session)
         
