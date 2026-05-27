@@ -4,8 +4,10 @@ from typing import Annotated, Optional
 # Schema
 from app.schemas.customer.base import (
     CustomerBaseSchema,
-    validate_string_null,
-    validate_asset_value
+)
+
+from app.schemas.validators import (
+    validate_string_null
 )
 
 # Core
