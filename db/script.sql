@@ -1,4 +1,4 @@
-(create type status as enum (
+create type status as enum (
 	'processed',
 	'rejected',
 	'pending',

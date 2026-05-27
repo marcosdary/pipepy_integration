@@ -1,22 +1,23 @@
 from http import HTTPStatus
 from pytest import mark
 from sqlalchemy import select
+from random import randint
 
 from app.models import CustomerModel
 from app.schemas.customer import CustomerReadSchema
 
 @mark.asyncio
-async def test_error_event_processed(client):
+async def test_error_event_processed(client, timestamp):
     response = await client.post(
         "/api/v1/webhooks/pipefy/card-updated",
         json={
             "event_id": "evt_130",
             "card_id": "card_456",
             "cliente_email": "caio@exemplo.com",
-            "timestamp": "2026-05-18T12:00:00Z"
+            "timestamp": timestamp
         }
     )
-    data: dict = response.json()
+    data = response.json()
     assert response.status_code == HTTPStatus.FORBIDDEN
     assert data == {
             "detail": [
@@ -37,29 +38,34 @@ async def test_error_event_fields_null(client):
             "timestamp": "2026-05-18T12:00:00Z"
         }
     )
-    data: dict = response.json()
+    data = response.json()
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert data == {
             "detail": [
                 {
-                    "msg": "Value error, Campo não pode ser vazio"
+                    "msg": "Value error, Campo não pode ser vazio",
+                    "loc": [
+                        "body",
+                        "event_id"
+                    ]
                 }
             ]
         }
     
 @mark.asyncio
 async def test_email_not_exist(client):
-    
+    event_id = f"evt_{randint(10_000, 99_999)}"
+
     response = await client.post(
         "/api/v1/webhooks/pipefy/card-updated",
         json={
-            "event_id": "evt_103",
+            "event_id": event_id,
             "card_id": "card_456",
-            "cliente_email": "caio.dutra@exemplo.com",
+            "cliente_email": "email.nao.existe@exemplo.com",
             "timestamp": "2026-05-18T12:00:00Z"
         }
     )
-    data: dict = response.json()
+    data = response.json()
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert data == {
         "detail": [
@@ -70,24 +76,24 @@ async def test_email_not_exist(client):
     }
 
 @mark.asyncio
-async def test_applying_the_rule_of_equity(client, session, customer):
-    before = CustomerReadSchema.model_validate(customer)
-    
+async def test_applying_the_rule_of_equity(client, session, customer_model: CustomerModel):
+    before = CustomerReadSchema.model_validate(customer_model)
+    event_id = f"evt_{randint(10_000, 99_999)}"
     response = await client.post(
         "/api/v1/webhooks/pipefy/card-updated",
         json={
-            "event_id": "evt_104",
+            "event_id": event_id,
             "card_id": "card_456",
-            "cliente_email": "caio.dutra@exemplo.com",
+            "cliente_email": before.cliente_email,
             "timestamp": "2026-05-18T12:00:00Z"
         }
     )
 
-    customer = await session.scalar(
+    customer_model = await session.scalar(
         select(CustomerModel)
-        .where(CustomerModel.cliente_email == "caio.dutra@exemplo.com")
+        .where(CustomerModel.cliente_email == before.cliente_email)
     )
-    after = CustomerReadSchema.model_validate(customer)
+    after = CustomerReadSchema.model_validate(customer_model)
     
     assert response.status_code == HTTPStatus.CREATED
     assert before.prioridade != after.prioridade

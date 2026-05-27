@@ -25,7 +25,10 @@ app.include_router(graphql.router, prefix="/graphql", tags=["GraphQL", "Exemplo 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     messages = [
-        {"msg": error["msg"]}
+        {
+            "msg": error["msg"],
+            "loc": error["loc"]
+        }
         for error in exc.errors()
     ]
     return JSONResponse(

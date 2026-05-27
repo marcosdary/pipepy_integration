@@ -19,6 +19,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "faker>=40.19.1",
     "pytest-asyncio>=1.4.0",
 ]
 

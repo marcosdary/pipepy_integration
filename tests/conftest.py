@@ -1,8 +1,11 @@
 from pytest_asyncio import fixture
-from sqlalchemy.exc import IntegrityError
-from pytest import raises
+from faker import Faker
+from random import randint
+from sqlalchemy.ext.asyncio import AsyncSession
 from httpx import AsyncClient, ASGITransport
+from datetime import datetime
 
+from app.core.config import settings
 from app.models import CustomerModel
 from app.core.config.database import AsyncSessionLocal, engine_async, get_session
 from app.main import app
@@ -17,9 +20,12 @@ async def session():
             await test_session.rollback()
     await engine_async.dispose()
 
+@fixture
+def timestamp():
+    return datetime.now(settings.zone_info).isoformat()
 
 @fixture
-async def client(session):
+async def client(session: AsyncSession):
     async def override_get_session():
         yield session
 
@@ -35,17 +41,21 @@ async def client(session):
     await engine_async.dispose()
 
 @fixture
-async def customer(session) -> CustomerModel:
+def customer_fake() -> Faker:
+    fake: Faker = Faker('pt_BR')
+    return fake
+
+@fixture
+async def customer_model(session: AsyncSession, customer_fake: Faker) -> CustomerModel:
     user = CustomerModel(
-        cliente_nome = "Caio Fernando Dutra",
-        cliente_email = "caio.dutra@exemplo.com",
+        cliente_nome = customer_fake.name(),
+        cliente_email = customer_fake.email(),
         tipo_solicitacao = "Atualização cadastral",
-        valor_patrimonio = 300000
+        valor_patrimonio = randint(100_000, 999_999)
     )
     session.add(user)
-    with raises(IntegrityError):
-        await session.commit()
-        await session.refresh(user)
-    await session.roolback()
+    
+    await session.commit()
+    await session.refresh(user)
         
     return user
