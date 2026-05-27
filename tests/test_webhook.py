@@ -3,6 +3,7 @@ from pytest import mark
 from sqlalchemy import select
 from random import randint
 
+from app.core.constants import Priority
 from app.models import CustomerModel
 from app.schemas.customer import CustomerReadSchema
 
@@ -76,8 +77,8 @@ async def test_email_not_exist(client):
     }
 
 @mark.asyncio
-async def test_applying_the_rule_of_equity(client, session, customer_model: CustomerModel):
-    before = CustomerReadSchema.model_validate(customer_model)
+async def test_applying_high_priority_customer(client, session, high_priority_customer: CustomerModel):
+    before = CustomerReadSchema.model_validate(high_priority_customer)
     event_id = f"evt_{randint(10_000, 99_999)}"
     response = await client.post(
         "/api/v1/webhooks/pipefy/card-updated",
@@ -89,14 +90,40 @@ async def test_applying_the_rule_of_equity(client, session, customer_model: Cust
         }
     )
 
-    customer_model = await session.scalar(
+    high_priority_customer = await session.scalar(
         select(CustomerModel)
         .where(CustomerModel.cliente_email == before.cliente_email)
     )
-    after = CustomerReadSchema.model_validate(customer_model)
+    after = CustomerReadSchema.model_validate(high_priority_customer)
     
     assert response.status_code == HTTPStatus.CREATED
-    assert before.prioridade != after.prioridade
+    assert after.prioridade == Priority.prioridade_alta
     assert after.status == "Processado"
+
+
+@mark.asyncio
+async def test_applying_low_priority_customer(client, session, low_priority_customer: CustomerModel):
+    before = CustomerReadSchema.model_validate(low_priority_customer)
+    event_id = f"evt_{randint(10_000, 99_999)}"
+    response = await client.post(
+        "/api/v1/webhooks/pipefy/card-updated",
+        json={
+            "event_id": event_id,
+            "card_id": "card_456",
+            "cliente_email": before.cliente_email,
+            "timestamp": "2026-05-18T12:00:00Z"
+        }
+    )
+
+    low_priority_customer = await session.scalar(
+        select(CustomerModel)
+        .where(CustomerModel.cliente_email == before.cliente_email)
+    )
+    after = CustomerReadSchema.model_validate(low_priority_customer)
+    
+    assert response.status_code == HTTPStatus.CREATED
+    assert after.prioridade == Priority.prioridade_normal
+    assert after.status == "Processado"
+
 
 

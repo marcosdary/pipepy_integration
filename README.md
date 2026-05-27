@@ -120,7 +120,7 @@ docker pull postgres:16
 ### 4.3 Inicialize o container PostgreSQL
 
 ```bash
-docker run --name pipefy_postgres \
+docker run --name pipefy-postgres \
 -e POSTGRES_USER=postgres \
 -e POSTGRES_PASSWORD=postgres \
 -e POSTGRES_DB=postgres \
@@ -149,24 +149,12 @@ DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
 REDIS_URL=redis://localhost:6379
 ```
 
----
-
-### 4.6 Crie as tabelas da aplicação
-
-Execute o script SQL:
-
-```bash
-psql "postgresql://postgres:postgres@localhost:5432/postgres" -f db/script.sql
-```
-
----
-
-### 4.7 Alternativa usando Docker Exec
+### 4.6 Crie as tabelas usando Docker Exec
 
 Caso não tenha o `psql` instalado localmente, execute o script diretamente no container:
 
 ```bash
-docker exec -i pipefy_postgres psql -U postgres -d postgres < db/script.sql
+docker exec -i pipefy-postgres psql -U postgres -d postgres < db/script.sql
 ```
 
 ---
@@ -196,7 +184,7 @@ Para visualizar o banco utilizando DBeaver:
 ### 4.9 Parar o container
 
 ```bash
-docker stop pipefy_postgres
+docker stop pipefy-postgres
 ```
 
 ---
@@ -204,7 +192,7 @@ docker stop pipefy_postgres
 ### 4.10 Iniciar novamente o container
 
 ```bash
-docker start pipefy_postgres
+docker start pipefy-postgres
 ```
 
 ---
@@ -212,7 +200,7 @@ docker start pipefy_postgres
 ### 4.11 Remover o container
 
 ```bash
-docker rm -f pipefy_postgres
+docker rm -f pipefy-postgres
 ```
 
 ---
@@ -220,12 +208,6 @@ docker rm -f pipefy_postgres
 # Execução Local
 
 Com as dependências instaladas e o `.env` configurado, inicie a API em modo de desenvolvimento:
-
-```bash
-uv run fastapi dev app/main.py
-```
-
-Alternativamente, execute diretamente com Uvicorn:
 
 ```bash
 uv run uvicorn app.main:app --reload

@@ -59,3 +59,19 @@ async def customer_model(session: AsyncSession, customer_fake: Faker) -> Custome
     await session.refresh(user)
         
     return user
+
+@fixture
+async def high_priority_customer(session: AsyncSession, customer_model: CustomerModel) -> CustomerModel:
+    customer_model.valor_patrimonio = randint(200_000, 999_999)
+    await session.commit()
+    await session.refresh(customer_model)
+    return customer_model
+
+@fixture
+async def low_priority_customer(session: AsyncSession, customer_model: CustomerModel) -> CustomerModel:
+    customer_model.valor_patrimonio = randint(0, 199_999)
+    await session.commit()
+    await session.refresh(customer_model)
+    return customer_model
+
+
