@@ -11,7 +11,6 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    REDIS_URL: str
     DATABASE_URL: str
     zone_info: Optional[ZoneInfo] = ZoneInfo("America/Sao_Paulo") 
 
