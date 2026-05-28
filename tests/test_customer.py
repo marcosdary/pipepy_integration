@@ -38,7 +38,7 @@ async def test_index(client):
     # Valida payload retornado
     assert response.json() == {
         "version": "1.0.0",
-        "name": "Integração com Pepify"
+        "message": "Integração com Pipefy"
     }
 
 

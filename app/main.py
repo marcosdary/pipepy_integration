@@ -103,8 +103,7 @@ async def validation_exception_handler(
             "detail": messages
         }
     )
-
-
+ 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(
     request: Request,
