@@ -106,7 +106,7 @@ def validate_datetime(value: str) -> datetime:
         )
 
 
-def validate_asset_value(value: int) -> int:
+def validate_asset_value(value) -> int:
     """
     Valida o valor patrimonial informado.
 
@@ -126,6 +126,10 @@ def validate_asset_value(value: int) -> int:
     """
 
     # Verifica se o patrimônio é válido
+    if not isinstance(value, int):
+        raise ValueError("O valor deve ser inteiro")
+    
+
     if value > 0:
         return value
 

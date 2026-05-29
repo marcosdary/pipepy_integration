@@ -1,4 +1,4 @@
-from pydantic import BeforeValidator, Field, AfterValidator, EmailStr
+from pydantic import BeforeValidator, Field, EmailStr
 from typing import Annotated, Optional
 
 # Schema
